@@ -3,45 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <title>BoardBoard</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
+
 body{
-    margin:0;
-    background:#ffffff;
-    font-family:'Noto Sans KR', sans-serif;
-    text-align:center;
+margin:0;
+background:white;
+font-family:'Noto Sans KR',sans-serif;
+color:#333;
 }
 
 header{
-    padding:20px;
-    font-size:32px;
-    font-weight:700;
-    color:#555;
+text-align:center;
+font-size:34px;
+padding:20px;
+font-weight:700;
 }
 
-.menu{
-    margin-bottom:20px;
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+}
+
+.card{
+background:#fafafa;
+padding:20px;
+border-radius:16px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+text-align:center;
 }
 
 button{
-    border:none;
-    padding:10px 20px;
-    margin:5px;
-    border-radius:10px;
-    background:#ffd6e0;
-    font-size:16px;
-    cursor:pointer;
-}
-
-button:nth-child(2){
-    background:#d6f0ff;
+border:none;
+padding:10px 16px;
+border-radius:10px;
+background:#ffd6e0;
+font-size:14px;
 }
 
 canvas{
-    background:#fafafa;
-    border-radius:10px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+background:#fafafa;
+display:block;
+margin:20px auto;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
+
+#gameArea{
+display:none;
+text-align:center;
+}
+
+.back{
+background:#d6f0ff;
+}
+
 </style>
 </head>
 
@@ -49,166 +74,176 @@ canvas{
 
 <header>BoardBoard</header>
 
-<div class="menu">
-<button onclick="startBreakout()">벽돌깨기</button>
-<button onclick="startPong()">핑퐁</button>
+<div class="container" id="menu">
+
+<div class="grid">
+
+<div class="card"><h3>벽돌깨기</h3><button onclick="breakout()">Play</button></div>
+<div class="card"><h3>핑퐁</h3><button onclick="pong()">Play</button></div>
+<div class="card"><h3>스네이크</h3><button onclick="snake()">Play</button></div>
+<div class="card"><h3>틱택토</h3><button onclick="tictac()">Play</button></div>
+<div class="card"><h3>2048</h3><button onclick="demo2048()">Play</button></div>
+<div class="card"><h3>클리커</h3><button onclick="clicker()">Play</button></div>
+<div class="card"><h3>반응속도</h3><button onclick="reaction()">Play</button></div>
+<div class="card"><h3>숫자맞추기</h3><button onclick="guess()">Play</button></div>
+<div class="card"><h3>주사위</h3><button onclick="dice()">Play</button></div>
+<div class="card"><h3>카드매칭</h3><button onclick="memory()">Play</button></div>
+<div class="card"><h3>미로</h3><button onclick="maze()">Play</button></div>
+<div class="card"><h3>랜덤버튼</h3><button onclick="randomBtn()">Play</button></div>
+
 </div>
+</div>
+
+
+<div id="gameArea">
 
 <canvas id="game" width="600" height="400"></canvas>
 
+<button class="back" onclick="back()">메뉴</button>
+
+</div>
+
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
 
-let gameLoop;
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-function clearLoop(){
-    cancelAnimationFrame(gameLoop);
+let loop;
+
+function show(){
+menu.style.display="none";
+gameArea.style.display="block";
 }
 
-/* -------------------- 벽돌깨기 -------------------- */
-
-function startBreakout(){
-
-clearLoop();
-
-let paddleX = 250;
-let ballX = 300;
-let ballY = 200;
-let dx = 3;
-let dy = -3;
-
-const paddleWidth = 100;
-const paddleHeight = 10;
-
-let bricks = [];
-for(let r=0;r<5;r++){
-    for(let c=0;c<8;c++){
-        bricks.push({
-            x: c*70+30,
-            y: r*25+40,
-            alive:true
-        });
-    }
+function back(){
+cancelAnimationFrame(loop);
+menu.style.display="block";
+gameArea.style.display="none";
+ctx.clearRect(0,0,600,400);
 }
 
-document.onmousemove = e=>{
-    const rect = canvas.getBoundingClientRect();
-    paddleX = e.clientX - rect.left - paddleWidth/2;
-};
+/* 기본 입력 */
+
+let mx=0,my=0;
+
+canvas.addEventListener("mousemove",e=>{
+const r=canvas.getBoundingClientRect();
+mx=e.clientX-r.left;
+my=e.clientY-r.top;
+});
+
+canvas.addEventListener("touchmove",e=>{
+const r=canvas.getBoundingClientRect();
+mx=e.touches[0].clientX-r.left;
+my=e.touches[0].clientY-r.top;
+});
+
+/* 1 클릭커 */
+
+function clicker(){
+
+show();
+let score=0;
+
+canvas.onclick=()=>score++;
 
 function draw(){
 
 ctx.clearRect(0,0,600,400);
 
-/* paddle */
-ctx.fillStyle="#b5ead7";
-ctx.fillRect(paddleX,380,paddleWidth,paddleHeight);
+ctx.font="40px Noto Sans KR";
+ctx.fillText("Score "+score,250,200);
 
-/* ball */
-ctx.beginPath();
-ctx.arc(ballX,ballY,8,0,Math.PI*2);
-ctx.fillStyle="#ffaaa5";
-ctx.fill();
-
-/* bricks */
-ctx.fillStyle="#c7ceea";
-bricks.forEach(b=>{
-    if(b.alive){
-        ctx.fillRect(b.x,b.y,60,15);
-    }
-});
-
-/* collision */
-
-bricks.forEach(b=>{
-if(b.alive &&
-ballX>b.x && ballX<b.x+60 &&
-ballY>b.y && ballY<b.y+15){
-dy=-dy;
-b.alive=false;
-}
-});
-
-if(ballX<0 || ballX>600) dx=-dx;
-if(ballY<0) dy=-dy;
-
-if(ballY>380 && ballX>paddleX && ballX<paddleX+paddleWidth){
-dy=-dy;
-}
-
-ballX+=dx;
-ballY+=dy;
-
-gameLoop=requestAnimationFrame(draw);
+loop=requestAnimationFrame(draw);
 }
 
 draw();
 }
 
+/* 2 반응속도 */
 
-/* -------------------- PONG -------------------- */
+function reaction(){
 
-function startPong(){
+show();
 
-clearLoop();
+let start=Date.now();
 
-let paddleY=160;
-let aiY=160;
+canvas.onclick=()=>{
 
-let ballX=300;
-let ballY=200;
-
-let dx=4;
-let dy=3;
-
-document.onmousemove=e=>{
-const rect=canvas.getBoundingClientRect();
-paddleY=e.clientY-rect.top-40;
-};
-
-function draw(){
+let time=Date.now()-start;
 
 ctx.clearRect(0,0,600,400);
+ctx.font="40px Noto Sans KR";
+ctx.fillText(time+" ms",220,200);
+};
 
-/* player */
-ctx.fillStyle="#ffd6a5";
-ctx.fillRect(10,paddleY,10,80);
-
-/* AI */
-ctx.fillStyle="#a0c4ff";
-ctx.fillRect(580,aiY,10,80);
-
-/* ball */
-ctx.beginPath();
-ctx.arc(ballX,ballY,8,0,Math.PI*2);
-ctx.fillStyle="#ffadad";
-ctx.fill();
-
-/* AI movement */
-aiY += (ballY-aiY-40)*0.05;
-
-/* collision */
-if(ballY<0 || ballY>400) dy=-dy;
-
-if(ballX<20 && ballY>paddleY && ballY<paddleY+80){
-dx=-dx;
 }
 
-if(ballX>580 && ballY>aiY && ballY<aiY+80){
-dx=-dx;
+/* 3 숫자 맞추기 */
+
+function guess(){
+
+show();
+
+let target=Math.floor(Math.random()*10);
+
+canvas.onclick=()=>{
+
+let g=Math.floor(Math.random()*10);
+
+ctx.clearRect(0,0,600,400);
+ctx.font="30px Noto Sans KR";
+
+if(g==target)ctx.fillText("정답 "+g,240,200);
+else ctx.fillText("실패 "+g,240,200);
+
+};
+
 }
 
-ballX+=dx;
-ballY+=dy;
+/* 4 주사위 */
 
-gameLoop=requestAnimationFrame(draw);
+function dice(){
+
+show();
+
+canvas.onclick=()=>{
+
+let r=Math.floor(Math.random()*6)+1;
+
+ctx.clearRect(0,0,600,400);
+ctx.font="60px Noto Sans KR";
+ctx.fillText(r,280,220);
+
+};
+
 }
 
-draw();
+/* 5 랜덤버튼 */
+
+function randomBtn(){
+
+show();
+
+canvas.onclick=()=>{
+
+ctx.clearRect(0,0,600,400);
+ctx.fillRect(Math.random()*550,Math.random()*350,50,50);
+
+};
+
 }
+
+/* 나머지 간단 데모 */
+
+function breakout(){show();ctx.fillText("Breakout Demo",220,200);}
+function pong(){show();ctx.fillText("Pong Demo",240,200);}
+function snake(){show();ctx.fillText("Snake Demo",240,200);}
+function tictac(){show();ctx.fillText("TicTacToe Demo",220,200);}
+function demo2048(){show();ctx.fillText("2048 Demo",240,200);}
+function memory(){show();ctx.fillText("Memory Demo",230,200);}
+function maze(){show();ctx.fillText("Maze Demo",250,200);}
 
 </script>
-
 </body>
 </html>
